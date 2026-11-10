@@ -1,142 +1,179 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Configuración de la página
-st.set_page_config(page_title="5 Gráficos en Streamlit", layout="wide")
+st.set_page_config(page_title="Dashboard Influencers 2026", layout="wide")
 
-st.title("📊 Visualización de 5 Gráficos con Streamlit")
-st.write("Comparativa de los 5 gráficos implementados en el cuaderno (Matplotlib, Seaborn y Nativos de Streamlit).")
+st.title("📊 Análisis de Influencers Globales de Instagram (2026)")
+st.write("Visualización de los 5 gráficos del cuaderno de Colab implementados en Streamlit.")
 
-# Cargar datos de ejemplo (Puedes cambiarlo por el dataset de tu Colab)
+# Cargar el CSV (asegúrate de subir instagram_global_influencers_2026.csv a tu GitHub)
 @st.cache_data
 def cargar_datos():
-    return sns.load_dataset("tips")
+    return pd.read_csv("instagram_global_influencers_2026.csv")
 
-df = cargar_datos()
+try:
+    influ = cargar_datos()
+except FileNotFoundError:
+    st.error("⚠️ No se encontró el archivo 'instagram_global_influencers_2026.csv'. Súbelo a la misma carpeta de tu repositorio de GitHub.")
+    st.stop()
 
-with st.expander("Ver tabla de datos original"):
-    st.dataframe(df.head(10))
+with st.expander("🔍 Ver primeras filas del dataset (influ.head())"):
+    st.dataframe(influ.head())
 
-# Selector para ver la versión nativa de Streamlit o las librerías del cuaderno
-modo = st.radio(
-    "Elige cómo visualizar los gráficos en la página:",
-    ["Nativos de Streamlit + Pyplot", "Comparativa directa: Matplotlib vs Seaborn (con st.pyplot)"],
-    horizontal=True
-)
+# Pestañas para ver los gráficos con componentes nativos de Streamlit o los exactos de tu Colab
+tab_st, tab_mat, tab_sns = st.tabs([
+    "🚀 Gráficos Nativos Streamlit",
+    "🐍 Tus 5 Gráficos en Matplotlib",
+    "🌊 Tus 5 Gráficos en Seaborn"
+])
 
-st.divider()
+# ==========================================
+# PESTAÑA 1: GRÁFICOS CON STREAMLIT
+# ==========================================
+with tab_st:
+    st.header("Visualización con Streamlit")
 
-if modo == "Nativos de Streamlit + Pyplot":
     col1, col2 = st.columns(2)
 
-    # 1. Gráfico de Barras
     with col1:
-        st.subheader("1. Gráfico de Barras (Propina media por día)")
-        datos_barras = df.groupby("day", observed=False)["tip"].mean()
-        st.bar_chart(datos_barras)
+        st.subheader("1. Distribución de Seguidores (en millones)")
+        fig_st1, ax_st1 = plt.subplots()
+        sns.histplot(influ['followers'] / 1e6, bins=20, color='skyblue', kde=True, ax=ax_st1)
+        ax_st1.set_xlabel('Seguidores (en millones)')
+        ax_st1.set_ylabel('Cantidad de Influencers')
+        st.pyplot(fig_st1)
 
-    # 2. Gráfico de Dispersión (Scatter)
+        st.subheader("3. Top 10 Países con más Influencers")
+        top_countries_st = influ['country'].value_counts().head(10)
+        st.bar_chart(top_countries_st)
+
+        st.subheader("5. Relación: Posts Publicados vs Influence Score")
+        st.scatter_chart(influ, x='posts', y='influence_score', color='#FFD700')
+
     with col2:
-        st.subheader("2. Gráfico de Dispersión (Cuenta total vs Propina)")
-        st.scatter_chart(df, x="total_bill", y="tip", color="sex")
+        st.subheader("2. Relación: Seguidores vs Likes Promedio (en millones)")
+        df_scatter = pd.DataFrame({
+            'Seguidores (M)': influ['followers'] / 1e6,
+            'Likes Promedio (M)': influ['avg_likes'] / 1e6
+        })
+        st.scatter_chart(df_scatter, x='Seguidores (M)', y='Likes Promedio (M)', color='#FF7F50')
 
-    col3, col4 = st.columns(2)
+        st.subheader("4. Distribución de Puntuación de Influencia (Boxplot)")
+        fig_st4, ax_st4 = plt.subplots(figsize=(8, 4))
+        sns.boxplot(data=influ, x='influence_score', color='orchid', ax=ax_st4)
+        ax_st4.set_xlabel('Influence Score')
+        st.pyplot(fig_st4)
 
-    # 3. Gráfico de Líneas
-    with col3:
-        st.subheader("3. Gráfico de Líneas (Evolución de las primeras 30 cuentas)")
-        st.line_chart(df[["total_bill", "tip"]].head(30))
+# ==========================================
+# PESTAÑA 2: TUS 5 GRÁFICOS DE MATPLOTLIB
+# ==========================================
+with tab_mat:
+    st.header("5 Gráficos con Matplotlib (Idénticos al Colab)")
+    col_m1, col_m2 = st.columns(2)
 
-    # 4. Histograma (Renderizado con st.pyplot)
-    with col4:
-        st.subheader("4. Histograma (Distribución de la cuenta total)")
-        fig_hist, ax_hist = plt.subplots()
-        sns.histplot(df["total_bill"], kde=True, ax=ax_hist, color="#ff4b4b")
-        st.pyplot(fig_hist)
-
-    # 5. Boxplot / Diagrama de Caja (Renderizado con st.pyplot)
-    st.subheader("5. Diagrama de Caja / Boxplot (Cuenta total por día)")
-    fig_box, ax_box = plt.subplots(figsize=(10, 4))
-    sns.boxplot(data=df, x="day", y="total_bill", hue="sex", ax=ax_box)
-    st.pyplot(fig_box)
-
-else:
-    st.info("En Streamlit, cualquier gráfico de Matplotlib o Seaborn de tu Colab se muestra envolviéndolo en `fig, ax = plt.subplots()` y llamando a `st.pyplot(fig)`.")
-    
-    col_mat, col_sns = st.columns(2)
-    
-    with col_mat:
-        st.header("🐍 Matplotlib")
-        
-        # 1. Barras Matplotlib
-        st.subheader("1. Barras")
+    with col_m1:
+        # 1. Histograma: Distribución de Seguidores
         fig1, ax1 = plt.subplots()
-        propinas_dia = df.groupby("day", observed=False)["tip"].mean()
-        ax1.bar(propinas_dia.index, propinas_dia.values, color="skyblue")
-        ax1.set_title("Propina media por día")
+        ax1.hist(influ['followers'] / 1e6, bins=20, color='skyblue', edgecolor='black')
+        ax1.set_title('1. Distribución de Seguidores (Matplotlib)')
+        ax1.set_xlabel('Seguidores (en millones)')
+        ax1.set_ylabel('Cantidad de Influencers')
+        ax1.grid(axis='y', linestyle='--', alpha=0.7)
         st.pyplot(fig1)
 
-        # 2. Dispersión Matplotlib
-        st.subheader("2. Dispersión")
-        fig2, ax2 = plt.subplots()
-        ax2.scatter(df["total_bill"], df["tip"], alpha=0.6, color="teal")
-        ax2.set_xlabel("Total Cuenta")
-        ax2.set_ylabel("Propina")
-        st.pyplot(fig2)
-
-        # 3. Líneas Matplotlib
-        st.subheader("3. Líneas")
+        # 3. Barras: Top 10 Países
+        top_countries = influ['country'].value_counts().head(10)
         fig3, ax3 = plt.subplots()
-        ax3.plot(df["total_bill"].head(30), label="Total Bill", color="orange")
-        ax3.legend()
+        ax3.bar(top_countries.index, top_countries.values, color='lightgreen', edgecolor='black')
+        ax3.set_title('3. Top 10 Países con más Influencers (Matplotlib)')
+        ax3.set_xlabel('País')
+        ax3.set_ylabel('Cantidad de Influencers')
+        plt.setp(ax3.get_xticklabels(), rotation=45, ha='right')
+        fig3.tight_layout()
         st.pyplot(fig3)
 
-        # 4. Histograma Matplotlib
-        st.subheader("4. Histograma")
-        fig4, ax4 = plt.subplots()
-        ax4.hist(df["total_bill"], bins=15, color="purple", edgecolor="black")
-        st.pyplot(fig4)
-
-        # 5. Boxplot Matplotlib
-        st.subheader("5. Boxplot")
+        # 5. Dispersión: Posts vs Influence Score
         fig5, ax5 = plt.subplots()
-        grupos = [ grupo["total_bill"].values for _, grupo in df.groupby("day", observed=False) ]
-        ax5.boxplot(grupos, tick_labels=df["day"].unique())
+        ax5.scatter(influ['posts'], influ['influence_score'], color='gold', alpha=0.7, edgecolors='black')
+        ax5.set_title('5. Relación: Posts Publicados vs Influence Score (Matplotlib)')
+        ax5.set_xlabel('Total de Posts')
+        ax5.set_ylabel('Influence Score')
+        ax5.grid(True, linestyle='--', alpha=0.5)
         st.pyplot(fig5)
 
-    with col_sns:
-        st.header("🌊 Seaborn")
+    with col_m2:
+        # 2. Dispersión: Seguidores vs Likes Promedio
+        fig2, ax2 = plt.subplots()
+        ax2.scatter(influ['followers'] / 1e6, influ['avg_likes'] / 1e6, color='coral', alpha=0.7, edgecolors='black')
+        ax2.set_title('2. Relación: Seguidores vs Likes Promedio (Matplotlib)')
+        ax2.set_xlabel('Seguidores (en millones)')
+        ax2.set_ylabel('Likes Promedio por Post (en millones)')
+        ax2.grid(True, linestyle='--', alpha=0.5)
+        st.pyplot(fig2)
 
-        # 1. Barras Seaborn
-        st.subheader("1. Barras")
-        fig6, ax6 = plt.subplots()
-        sns.barplot(data=df, x="day", y="tip", ax=ax6, palette="viridis", errorbar=None)
-        ax6.set_title("Propina media por día")
+        # 4. Boxplot: Distribución de Influence Score
+        fig4, ax4 = plt.subplots()
+        ax4.boxplot(influ['influence_score'].dropna(), vert=False, patch_artist=True,
+                    boxprops=dict(facecolor='orchid', color='black'),
+                    medianprops=dict(color='yellow', linewidth=2))
+        ax4.set_title('4. Distribución de Puntuación de Influencia (Matplotlib)')
+        ax4.set_xlabel('Influence Score')
+        ax4.grid(axis='x', linestyle='--', alpha=0.7)
+        st.pyplot(fig4)
+
+# ==========================================
+# PESTAÑA 3: TUS 5 GRÁFICOS DE SEABORN
+# ==========================================
+with tab_sns:
+    st.header("5 Gráficos con Seaborn (Idénticos al Colab)")
+    col_s1, col_s2 = st.columns(2)
+
+    with col_s1:
+        # 1. Histograma: Distribución de Seguidores con KDE
+        fig6, ax6 = plt.subplots(figsize=(10, 6))
+        sns.histplot(data=influ, x=influ['followers'] / 1e6, bins=20, color='skyblue', kde=True, ax=ax6)
+        ax6.set_title('1. Distribución de Seguidores (Seaborn)')
+        ax6.set_xlabel('Seguidores (en millones)')
+        ax6.set_ylabel('Cantidad de Influencers')
         st.pyplot(fig6)
 
-        # 2. Dispersión Seaborn
-        st.subheader("2. Dispersión")
-        fig7, ax7 = plt.subplots()
-        sns.scatterplot(data=df, x="total_bill", y="tip", hue="sex", ax=ax7)
-        st.pyplot(fig7)
-
-        # 3. Líneas Seaborn
-        st.subheader("3. Líneas")
-        fig8, ax8 = plt.subplots()
-        sns.lineplot(data=df.head(30), x=df.head(30).index, y="total_bill", ax=ax8, color="orange")
+        # 3. Barras: Top 10 Países
+        top_countries_df = influ['country'].value_counts().head(10).reset_index()
+        top_countries_df.columns = ['country', 'count']
+        fig8, ax8 = plt.subplots(figsize=(10, 6))
+        sns.barplot(data=top_countries_df, x='country', y='count', hue='country', palette='viridis', legend=False, ax=ax8)
+        ax8.set_title('3. Top 10 Países con más Influencers (Seaborn)')
+        ax8.set_xlabel('País')
+        ax8.set_ylabel('Cantidad de Influencers')
+        plt.setp(ax8.get_xticklabels(), rotation=45, ha='right')
+        fig8.tight_layout()
         st.pyplot(fig8)
 
-        # 4. Histograma Seaborn
-        st.subheader("4. Histograma")
-        fig9, ax9 = plt.subplots()
-        sns.histplot(data=df, x="total_bill", bins=15, kde=True, ax=ax9, color="purple")
-        st.pyplot(fig9)
-
-        # 5. Boxplot Seaborn
-        st.subheader("5. Boxplot")
-        fig10, ax10 = plt.subplots()
-        sns.boxplot(data=df, x="day", y="total_bill", ax=ax10, palette="Set2")
+        # 5. Dispersión: Posts vs Influence Score con línea de tendencia
+        fig10, ax10 = plt.subplots(figsize=(10, 6))
+        sns.regplot(data=influ, x='posts', y='influence_score', color='gold',
+                    scatter_kws={'edgecolor': 'black', 'alpha': 0.7}, ax=ax10)
+        ax10.set_title('5. Relación: Posts Publicados vs Influence Score (Seaborn)')
+        ax10.set_xlabel('Total de Posts')
+        ax10.set_ylabel('Influence Score')
         st.pyplot(fig10)
+
+    with col_s2:
+        # 2. Dispersión: Seguidores vs Likes Promedio
+        fig7, ax7 = plt.subplots(figsize=(10, 6))
+        sns.scatterplot(data=influ, x=influ['followers'] / 1e6, y=influ['avg_likes'] / 1e6,
+                        color='coral', alpha=0.8, edgecolor='black', ax=ax7)
+        ax7.set_title('2. Relación: Seguidores vs Likes Promedio (Seaborn)')
+        ax7.set_xlabel('Seguidores (en millones)')
+        ax7.set_ylabel('Likes Promedio por Post (en millones)')
+        st.pyplot(fig7)
+
+        # 4. Boxplot: Distribución de Influence Score
+        fig9, ax9 = plt.subplots(figsize=(10, 6))
+        sns.boxplot(data=influ, x='influence_score', color='orchid', ax=ax9)
+        ax9.set_title('4. Distribución de Puntuación de Influencia (Seaborn)')
+        ax9.set_xlabel('Influence Score')
+        st.pyplot(fig9)
