@@ -193,4 +193,8 @@ else:
         })
         st.scatter_chart(df_scatter, x='Seguidores (M)', y='Likes Promedio (M)', color='#FF7F50')
 
-        st.subheader("4. Dist
+        st.subheader("4. Distribución de Puntuación de Influencia (Boxplot)")
+        fig_st4, ax_st4 = plt.subplots()
+        sns.boxplot(data=influ, x='influence_score', color='orchid', ax=ax_st4)
+        ax_st4.set_xlabel('Influence Score')
+        st.pyplot(fig_st4)
