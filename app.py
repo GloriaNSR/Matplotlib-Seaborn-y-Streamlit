@@ -20,9 +20,6 @@ except FileNotFoundError:
     st.error("⚠️ No se encontró 'instagram_global_influencers_2026.csv'. Asegúrate de subirlo a tu repositorio de GitHub.")
     st.stop()
 
-with st.expander("🔍 Ver primeras filas del dataset (influ.head())"):
-    st.dataframe(influ.head())
-
 # Selector de modo igual que en la primera versión
 modo = st.radio(
     "Elige cómo visualizar los gráficos en la página:",
@@ -49,7 +46,7 @@ if modo == "Comparativa lado a lado: Matplotlib vs Seaborn":
         st.header("🌊 Seaborn")
 
     # --- GRÁFICO 1: HISTOGRAMA ---
-    st.subheader("1. Distribución de Seguidores")
+    st.subheader("1. HISTOGRAMA. Distribución de Seguidores")
     c1_mat, c1_sns = st.columns(2)
     with c1_mat:
         fig1, ax1 = plt.subplots(figsize=(8, 5))
@@ -71,7 +68,7 @@ if modo == "Comparativa lado a lado: Matplotlib vs Seaborn":
     st.divider()
 
     # --- GRÁFICO 2: DISPERSIÓN (SEGUIDORES VS LIKES) ---
-    st.subheader("2. Relación: Seguidores vs Likes Promedio")
+    st.subheader("2. DISPERSIÓN. Relación: Seguidores vs Likes Promedio")
     c2_mat, c2_sns = st.columns(2)
     with c2_mat:
         fig2, ax2 = plt.subplots(figsize=(8, 5))
@@ -94,7 +91,7 @@ if modo == "Comparativa lado a lado: Matplotlib vs Seaborn":
     st.divider()
 
     # --- GRÁFICO 3: BARRAS (TOP 10 PAÍSES) ---
-    st.subheader("3. Top 10 Países con más Influencers")
+    st.subheader("3. BARRAS. Top 10 Países con más Influencers")
     c3_mat, c3_sns = st.columns(2)
     with c3_mat:
         top_countries = influ['country'].value_counts().head(10)
@@ -122,7 +119,7 @@ if modo == "Comparativa lado a lado: Matplotlib vs Seaborn":
     st.divider()
 
     # --- GRÁFICO 4: BOXPLOT (INFLUENCE SCORE) ---
-    st.subheader("4. Distribución de Puntuación de Influencia (Boxplot)")
+    st.subheader("4. BOXPLOT. Distribución de Puntuación de Influencia (Boxplot)")
     c4_mat, c4_sns = st.columns(2)
     with c4_mat:
         fig4, ax4 = plt.subplots(figsize=(8, 5))
@@ -144,7 +141,7 @@ if modo == "Comparativa lado a lado: Matplotlib vs Seaborn":
     st.divider()
 
     # --- GRÁFICO 5: DISPERSIÓN (POSTS VS INFLUENCE SCORE) ---
-    st.subheader("5. Relación: Posts Publicados vs Influence Score")
+    st.subheader("5. DISPERSIÓN. Relación: Posts Publicados vs Influence Score")
     c5_mat, c5_sns = st.columns(2)
     with c5_mat:
         fig5, ax5 = plt.subplots(figsize=(8, 5))
@@ -171,30 +168,34 @@ else:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("1. Distribución de Seguidores (en millones)")
+        st.subheader("1. HISTOGRAMA. Distribución de Seguidores (en millones)")
         fig_st1, ax_st1 = plt.subplots()
         sns.histplot(influ['followers'] / 1e6, bins=20, color='skyblue', kde=True, ax=ax_st1)
         ax_st1.set_xlabel('Seguidores (en millones)')
         ax_st1.set_ylabel('Cantidad de Influencers')
         st.pyplot(fig_st1)
 
-        st.subheader("3. Top 10 Países con más Influencers (Nativo Streamlit)")
-        top_countries_st = influ['country'].value_counts().head(10)
-        st.bar_chart(top_countries_st)
-
-        st.subheader("5. Posts Publicados vs Influence Score (Nativo Streamlit)")
-        st.scatter_chart(influ, x='posts', y='influence_score', color='#FFD700')
-
-    with col2:
-        st.subheader("2. Seguidores vs Likes Promedio (Nativo Streamlit)")
-        df_scatter = pd.DataFrame({
-            'Seguidores (M)': influ['followers'] / 1e6,
-            'Likes Promedio (M)': influ['avg_likes'] / 1e6
+       st.subheader("2. DISPERSIÓN. Seguidores vs Likes Promedio (Nativo Streamlit)")
+       df_scatter = pd.DataFrame({
+        'Seguidores (M)': influ['followers'] / 1e6,
+        'Likes Promedio (M)': influ['avg_likes'] / 1e6
         })
         st.scatter_chart(df_scatter, x='Seguidores (M)', y='Likes Promedio (M)', color='#FF7F50')
 
-        st.subheader("4. Distribución de Puntuación de Influencia (Boxplot)")
+        st.subheader("3. BARRAS. Top 10 Países con más Influencers (Nativo Streamlit)")
+        top_countries_st = influ['country'].value_counts().head(10)
+        st.bar_chart(top_countries_st)
+
+
+
+    with col2:
+        st.subheader("4. BOXPLOT. Distribución de Puntuación de Influencia (Boxplot)")
         fig_st4, ax_st4 = plt.subplots()
         sns.boxplot(data=influ, x='influence_score', color='orchid', ax=ax_st4)
         ax_st4.set_xlabel('Influence Score')
         st.pyplot(fig_st4)
+        
+        st.subheader("5. DISPERSIÓN. Posts Publicados vs Influence Score (Nativo Streamlit)")
+        st.scatter_chart(influ, x='posts', y='influence_score', color='#FFD700')
+
+
