@@ -175,8 +175,8 @@ else:
         ax_st1.set_ylabel('Cantidad de Influencers')
         st.pyplot(fig_st1)
 
-       st.subheader("2. DISPERSIÓN. Seguidores vs Likes Promedio (Nativo Streamlit)")
-       df_scatter = pd.DataFrame({
+        st.subheader("2. DISPERSIÓN. Seguidores vs Likes Promedio (Nativo Streamlit)")
+        df_scatter = pd.DataFrame({
         'Seguidores (M)': influ['followers'] / 1e6,
         'Likes Promedio (M)': influ['avg_likes'] / 1e6
         })
